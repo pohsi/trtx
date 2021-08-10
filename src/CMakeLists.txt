@@ -23,6 +23,7 @@ endif()
 
 set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/logger.cpp
 )
 
 add_executable(${TARGET_NAME}
