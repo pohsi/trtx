@@ -2,12 +2,6 @@
 #include "errorRecorder.h"
 #include "logging.h"
 
-namespace {
-
-SampleErrorRecorder gRecorder;
-
-}
-
 namespace trtx {
 
 Logger gLogger{Logger::Severity::kINFO};

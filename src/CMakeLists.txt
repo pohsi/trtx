@@ -22,8 +22,9 @@ if(NOT TENSORRT_FOUND)
 endif()
 
 set(SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/logger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/application.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
 add_executable(${TARGET_NAME}

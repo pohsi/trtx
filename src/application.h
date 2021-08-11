@@ -4,12 +4,16 @@
 
 namespace trtx {
 
-class Appliction {
+class Application {
+public:
+
+    virtual ~Application();
     
+    virtual int Run() = 0;
 };
 
 
-using ApplictionPtr = std::unique_ptr<Appliction>;
+using ApplicationPtr = std::unique_ptr<Application>;
 
 
 struct ApplicationBuildOption {
@@ -21,7 +25,7 @@ struct ApplicationBuildOption {
 class ApplicationFactory {
 public:
 
-    ApplictionPtr Create(const ApplicationBuildOption &option) const;
+    ApplicationPtr Create(const ApplicationBuildOption &option) const;
 
 };
 

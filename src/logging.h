@@ -242,7 +242,7 @@ public:
     //!
     void log(Severity severity, const char* msg) noexcept override
     {
-        LogStreamConsumer(mReportableSeverity, severity) << "[TRT] " << std::string(msg) << std::endl;
+        LogStreamConsumer(mReportableSeverity, severity) << "[TRTX] " << std::string(msg) << std::endl;
     }
 
     //!
