@@ -14,7 +14,7 @@ using namespace trtx;
 const char weightPath[] { "../data/model.wts" };
 const char enginePath[] { "../data/model.engine" };
 const char inputBlobName[] { "data" };
-const char ouputBlobName[] { "prob" };
+const char outputBlobName[] { "prob" };
 constexpr size_t inputHeight{ 32 };
 constexpr size_t inputWidth{ 32 };
 constexpr int32_t outputSize{ 10 };
@@ -117,10 +117,12 @@ private:
 
 
     std::shared_ptr<nvinfer1::INetworkDefinition> BuildNetwork(nvinfer1::IBuilder &builder, const WeightMap &weightMap) {
+
+        gLogInfo << "Enter BuildNetwork" << std::endl;
         auto network{ infer_object(builder.createNetworkV2(0)) };
         ASSERT(nullptr != network);
 
-        auto tensor{ network->addInput(inputBlobName, nvinfer1::DataType::kFLOAT, nvinfer1::Dims{ 1, { inputHeight, inputWidth } }) };
+        auto tensor{ network->addInput(inputBlobName, nvinfer1::DataType::kFLOAT, nvinfer1::Dims3{ 1, inputHeight, inputWidth }) };
         ASSERT(nullptr != tensor && "network addInput failed");
 
         auto iterConv1Weight{ weightMap.find("conv1.weight") };
@@ -159,7 +161,6 @@ private:
         auto fc1{ network->addFullyConnected(*pool2->getOutput(0), 120, iterFc1Weight->second, iterFc1Bias->second) };
         ASSERT(nullptr != fc1 && "network addFullyConnected failed");
 
-
         auto relu3{ network->addActivation(*fc1->getOutput(0), nvinfer1::ActivationType::kRELU) };
         ASSERT(nullptr != relu3 && "network addActivation failed");
 
@@ -172,7 +173,6 @@ private:
         auto relu4{ network->addActivation(*fc2->getOutput(0), nvinfer1::ActivationType::kRELU) };
         ASSERT(nullptr != relu4 && "network addActivation failed");
 
-
         auto iterFc3Weight{ weightMap.find("fc3.weight") };
         auto iterFc3Bias{ weightMap.find("fc3.bias") };
         ASSERT(weightMap.end() != iterFc3Weight && weightMap.end() != iterFc3Bias);
@@ -181,9 +181,10 @@ private:
 
         auto prob{ network->addSoftMax(*fc3->getOutput(0)) };
         ASSERT(nullptr != prob && "network addSoftMax failed");
-        prob->getOutput(0)->setName(ouputBlobName);
-        network->markOutput(*prob->getOutput(0));
 
+        prob->getOutput(0)->setName(outputBlobName);
+        network->markOutput(*prob->getOutput(0));
+        gLogInfo << "Leave BuildNetwork" << std::endl;
         return network;
     }
 
@@ -339,7 +340,7 @@ public:
     bool ProcessInput(const trtx::BufferManager &buffers, int inputH, int inputW) {
         //const std::vector<uint8_t> inputData(inputH * inputW, 1);
         // Fill input buffer with all 1's which size is H * W
-        float *hostDataBuffer = static_cast<float*>(buffers.getHostBuffer(this->m_inOut["input"]));
+        float *hostDataBuffer = static_cast<float*>(buffers.getHostBuffer(this->m_inOut[inputBlobName]));
         for (int i = 0; i < inputH * inputW; i++) {
             hostDataBuffer[i] = 1;
         }
@@ -347,7 +348,7 @@ public:
     }
 
     void PrintOutput(const BufferManager &buffers) const {
-        const float *probPtr{ static_cast<const float*>(buffers.getHostBuffer(this->m_inOut.at("output"))) };
+        const float *probPtr{ static_cast<const float*>(buffers.getHostBuffer(this->m_inOut.at(outputBlobName))) };
         std::cout << "Outout: ";
         for (const auto &iter : std::vector<float>{ probPtr, probPtr + outputSize }) {
             std::cout << iter << " ";
