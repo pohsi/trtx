@@ -119,6 +119,7 @@ private:
     std::shared_ptr<nvinfer1::INetworkDefinition> BuildNetwork(nvinfer1::IBuilder &builder, const WeightMap &weightMap) {
 
         gLogInfo << "Enter BuildNetwork" << std::endl;
+        
         auto network{ infer_object(builder.createNetworkV2(0)) };
         ASSERT(nullptr != network);
 
@@ -263,9 +264,8 @@ public:
             gLogError << "CreateExecutionContext failed" << std::endl;
             return -1;
         }
-
+        
         BufferManager buffers{ this->m_engine, this->m_batchSize };
-
         if (false == this->ProcessInput(buffers, inputHeight, inputWidth)) {
             gLogError << "ProcessInput failed" << std::endl;
             return -1;
@@ -273,10 +273,9 @@ public:
 
         cudaStream_t stream;
         CHECK(cudaStreamCreate(&stream));
-
-
         buffers.copyInputToDeviceAsync(stream);
-        if (!context->enqueueV2(buffers.getDeviceBindings().data(), stream, nullptr)) {
+        bool status = context->execute(this->m_batchSize, buffers.getDeviceBindings().data());
+        if (!status) {
             return -1;
         }
         buffers.copyOutputToHostAsync(stream);
@@ -324,16 +323,17 @@ public:
                     gLogInfo << "Found input: " << engine->getBindingName(b) << " shape=" << dims
                                     << " dtype=" << (int) engine->getBindingDataType(b) << std::endl;
                 }
-                this->m_inOut["input"] = engine->getBindingName(b);
+                this->m_inOut[inputBlobName] = engine->getBindingName(b);
             }
             else {
                 if (this->m_verbose) {
                     gLogInfo << "Found output: " << engine->getBindingName(b) << " shape=" << dims
                                     << " dtype=" << (int) engine->getBindingDataType(b) << std::endl;
                 }
-                this->m_inOut["output"] = engine->getBindingName(b);
+                this->m_inOut[outputBlobName] = engine->getBindingName(b);
             }
         }
+        return true;
     }
 
 
